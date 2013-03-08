@@ -454,15 +454,13 @@ public final class CallManager {
                 break;
         }
 
-        if (state == PhoneConstants.State.RINGING && lastAudioMode != AudioManager.MODE_RINGTONE) {
+        if (!mRingVolumeReceiverIsRegistered && state == PhoneConstants.State.RINGING) {
             context.registerReceiver(mRingVolumeChangeReceiver,
                     new IntentFilter(AudioManager.VOLUME_CHANGED_ACTION));
             mRingVolumeReceiverIsRegistered = true;
-        } else if (state != PhoneConstants.State.RINGING && lastAudioMode == AudioManager.MODE_RINGTONE) {
-            if (mRingVolumeReceiverIsRegistered) {
-                context.unregisterReceiver(mRingVolumeChangeReceiver);
-                mRingVolumeReceiverIsRegistered = false;
-            }
+        } else if (mRingVolumeReceiverIsRegistered && state != PhoneConstants.State.RINGING) {
+            context.unregisterReceiver(mRingVolumeChangeReceiver);
+            mRingVolumeReceiverIsRegistered = false;
         }
 
         // Set additional audio parameters needed for incall audio
@@ -636,7 +634,7 @@ public final class CallManager {
             int currMode = audioManager.getMode();
             if ((currMode != AudioManager.MODE_IN_CALL) && !(ringingPhone instanceof SipPhone)) {
                 Log.d(LOG_TAG, "setAudioMode Setting audio mode from " +
-                        currMode + " to " + AudioManager.MODE_IN_CALL);
+                                currMode + " to " + AudioManager.MODE_IN_CALL);
                 audioManager.setMode(AudioManager.MODE_IN_CALL);
                 mSpeedUpAudioForMtCall = true;
             }

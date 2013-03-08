@@ -73,7 +73,7 @@ public class SmsUsageMonitor {
     private static final String SHORT_CODE_PATH = "/data/misc/sms/codes";
 
     /** Default checking period for SMS sent without user permission. */
-    private static final int DEFAULT_SMS_CHECK_PERIOD = 1800000;    // 30 minutes
+    private static final int DEFAULT_SMS_CHECK_PERIOD = 60000;      // 1 minute
 
     /** Default number of SMS sent in checking period without user permission. */
     private static final int DEFAULT_SMS_MAX_COUNT = 30;
@@ -231,11 +231,8 @@ public class SmsUsageMonitor {
      */
     private class SettingsObserver extends ContentObserver {
 
-        private Context mContext;
-
-        SettingsObserver(Handler handler, Context context) {
+        SettingsObserver(Handler handler) {
             super(handler);
-            mContext = context;
         }
 
         @Override
@@ -253,7 +250,7 @@ public class SmsUsageMonitor {
     private class SettingsObserverHandler extends Handler {
         SettingsObserverHandler(Context context) {
             ContentResolver resolver = context.getContentResolver();
-            ContentObserver globalObserver = new SettingsObserver(this, context);
+            ContentObserver globalObserver = new SettingsObserver(this);
             resolver.registerContentObserver(Settings.Global.getUriFor(
                     Settings.Global.SMS_SHORT_CODE_CONFIRMATION), false, globalObserver);
             resolver.registerContentObserver(Settings.Global.getUriFor(
