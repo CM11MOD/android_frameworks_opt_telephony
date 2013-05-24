@@ -25,6 +25,7 @@ import static android.telephony.TelephonyManager.NETWORK_TYPE_HSDPA;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_HSUPA;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_HSPA;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_HSPAP;
+import static android.telephony.TelephonyManager.NETWORK_TYPE_DCHSPAP;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -568,6 +569,20 @@ public class RIL extends BaseCommands implements CommandsInterface {
                 mSocket = s;
                 Log.i(LOG_TAG, "Connected to '" + SOCKET_NAME_RIL + "' socket");
 
+                /* Compatibility with qcom's DSDS (Dual SIM) stack */
+                if (needsOldRilFeature("qcomdsds")) {
+                    String str = "SUB1";
+                    byte[] data = str.getBytes();
+                    try {
+                        mSocket.getOutputStream().write(data);
+                        Log.i(LOG_TAG, "Data sent!!");
+                    } catch (IOException ex) {
+                            Log.e(LOG_TAG, "IOException", ex);
+                    } catch (RuntimeException exc) {
+                        Log.e(LOG_TAG, "Uncaught exception ", exc);
+                    }
+                }
+
                 int length = 0;
                 try {
                     InputStream is = mSocket.getInputStream();
@@ -912,7 +927,6 @@ public class RIL extends BaseCommands implements CommandsInterface {
 
         rr.mp.writeString(address);
         rr.mp.writeInt(clirMode);
-        rr.mp.writeInt(0); // UUS information is absent
 
         if (uusInfo == null) {
             rr.mp.writeInt(0); // UUS information is absent
@@ -1428,6 +1442,11 @@ public class RIL extends BaseCommands implements CommandsInterface {
 
     public void
     setRadioPower(boolean on, Message result) {
+        boolean allow = SystemProperties.getBoolean("persist.ril.enable", true);
+        if (!allow) {
+            return;
+        }
+
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_RADIO_POWER, result);
 
         rr.mp.writeInt(1);
@@ -3404,6 +3423,8 @@ public class RIL extends BaseCommands implements CommandsInterface {
            radioType = NETWORK_TYPE_HSPA;
        } else if (radioString.equals("HSPAP")) {
            radioType = NETWORK_TYPE_HSPAP;
+       } else if (radioString.equals("DCHSPAP")) {
+           radioType = NETWORK_TYPE_DCHSPAP;
        } else {
            radioType = NETWORK_TYPE_UNKNOWN;
        }
