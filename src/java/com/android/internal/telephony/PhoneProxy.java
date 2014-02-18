@@ -79,9 +79,6 @@ public class PhoneProxy extends Handler implements Phone {
         mPhoneSubInfoProxy = new PhoneSubInfoProxy(phone.getPhoneSubInfo());
         mCommandsInterface = ((PhoneBase)mActivePhone).mCi;
 
-        mIccSmsInterfaceManagerProxy =
-            new IccSmsInterfaceManagerProxy(mActivePhone.getContext(), mIccSmsInterfaceManager);
-
         mCommandsInterface.registerForRilConnected(this, EVENT_RIL_CONNECTED, null);
         mCommandsInterface.registerForOn(this, EVENT_RADIO_ON, null);
         mCommandsInterface.registerForVoiceRadioTechChanged(
@@ -93,6 +90,8 @@ public class PhoneProxy extends Handler implements Phone {
         } else if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_1xRTT);
         }
+        mIccSmsInterfaceManagerProxy =
+            new IccSmsInterfaceManagerProxy(mActivePhone.getContext(), mIccSmsInterfaceManager);
     }
 
     @Override
